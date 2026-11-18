@@ -49,6 +49,22 @@ def export_pfx_with_cryptography(pem_cert_file, pem_key_file, pfx_password=None,
     if pfx_password is not None:
         print(f"[i] Passwort für PFX: {pfx_password}")
 
+
+def certificate_subject_from_dn(dn):
+    """Return a short CN for the certificate while preserving dn as the owner."""
+    first_rdn = dn.split(",", 1)[0].strip()
+    subject = first_rdn[3:].strip() if first_rdn.casefold().startswith("cn=") else first_rdn
+
+    if not subject:
+        subject = "KeyCredential"
+
+    # OpenSSL limits a certificate commonName to 64 encoded bytes.
+    encoded_subject = subject.encode("utf-8")
+    if len(encoded_subject) > 64:
+        subject = encoded_subject[:64].decode("utf-8", errors="ignore")
+
+    return subject
+
 def main():
 
     if len(sys.argv) < 2:
@@ -56,7 +72,8 @@ def main():
         sys.exit()
     
     dn = sys.argv[1]
-    certificate = X509Certificate2(dn, keySize=2048, notBefore=(-40*365), notAfter=(40*365))
+    certificate_subject = certificate_subject_from_dn(dn)
+    certificate = X509Certificate2(certificate_subject, keySize=2048, notBefore=(-40*365), notAfter=(40*365))
     keyCredential = KeyCredential.fromX509Certificate2(certificate=certificate, deviceId=Guid(), owner=dn, currentTime=DateTime())
     print("KeyCredential: %s" % keyCredential.toDNWithBinary().toString())
 
